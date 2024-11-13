@@ -2,25 +2,41 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+
+public enum State
+{ 
+    Idle,
+    Moving,
+    Jumping,
+    Falling,
+    Attack,
+    Die,
+}
+
 public class PlayerController : MonoBehaviour
 {
+    [Header("Input")]
     [SerializeField]
     InputAction moveAction;
-
     [SerializeField]
     InputAction jumpAction;
 
+    [Header("Parameters")]
     [SerializeField]
     float moveSpeed = 10.0f;
-
     [SerializeField]
-    float jumpForce = 5.0f; 
+    float jumpForce = 5.0f;
+    [SerializeField]
+    float distanceToCheckGround;
 
     Animator animator;
     Rigidbody2D rigidbody;
-    bool bIsMoving;
-    int facingDirection = 1;
+    
+    bool bIsMoving = false;
+    bool bIsGrounded = true;
     bool bisFacingRight = true;
+
+    int facingDirection = 1;
 
     private void OnEnable()
     {
@@ -53,11 +69,10 @@ public class PlayerController : MonoBehaviour
         DoFlip();
 
         // Jump
-        if (jumpAction.IsPressed())
-        {
+        bIsGrounded = Physics2D.Raycast(gameObject.transform.position, Vector2.down, distanceToCheckGround, LayerMask.GetMask("Ground"));
+        if (jumpAction.IsPressed() && bIsGrounded)
             rigidbody.velocity = new Vector2(rigidbody.velocity.x, jumpForce);
-        }
-
+        
         UpdateAnimatiorParameters();
     }
 
@@ -82,6 +97,18 @@ public class PlayerController : MonoBehaviour
     void UpdateAnimatiorParameters()
     {
         bIsMoving = (rigidbody.velocity.x != 0);
+        animator.SetFloat("yVelocity", rigidbody.velocity.y);
         animator.SetBool("bIsMoving", bIsMoving);
+        animator.SetBool("bIsGrounded", bIsGrounded);
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.DrawLine(
+            gameObject.transform.position, 
+            new Vector3(
+                gameObject.transform.position.x,
+                gameObject.transform.position.y - distanceToCheckGround)
+        );
     }
 }
