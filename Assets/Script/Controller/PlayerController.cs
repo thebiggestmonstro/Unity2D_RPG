@@ -3,16 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public enum State
-{ 
-    Idle,
-    Moving,
-    Jumping,
-    Falling,
-    Attack,
-    Die,
-}
-
 public class PlayerController : MonoBehaviour
 {
     [Header("Input")]
@@ -20,6 +10,18 @@ public class PlayerController : MonoBehaviour
     InputAction moveAction;
     [SerializeField]
     InputAction jumpAction;
+    [SerializeField]
+    InputAction dashAction;
+
+    [Header("Dash")]
+    [SerializeField]
+    float dashDuaration;
+    float dashTime;
+    [SerializeField]
+    float dashSpeed;
+    [SerializeField]
+    float dashCooldown;
+    float dashCooldownTimer;
 
     [Header("Parameters")]
     [SerializeField]
@@ -35,6 +37,7 @@ public class PlayerController : MonoBehaviour
     bool bIsMoving = false;
     bool bIsGrounded = true;
     bool bisFacingRight = true;
+    bool bIsDashing = false;
 
     int facingDirection = 1;
 
@@ -42,16 +45,25 @@ public class PlayerController : MonoBehaviour
     {
         moveAction.Enable();
         jumpAction.Enable();
+        dashAction.Enable();
     }
 
     private void OnDisable()
     {
         moveAction.Disable();
-        jumpAction.Enable();
+        jumpAction.Disable();
+        dashAction.Disable();
     }
 
     private void Update()
     {
+        dashTime -= Time.deltaTime;
+        dashCooldownTimer -= Time.deltaTime;
+
+        bIsGrounded = Physics2D.Raycast(gameObject.transform.position, Vector2.down, distanceToCheckGround, LayerMask.GetMask("Ground"));
+        bIsMoving = (rigidbody.velocity.x != 0);
+        bIsDashing = dashTime < 0.0f ? false : true;
+
         UpdateMoving();
     }
 
@@ -63,17 +75,37 @@ public class PlayerController : MonoBehaviour
 
     void UpdateMoving()
     {
-        // Move + Flip
-        float horizontalValue = moveAction.ReadValue<Vector2>().x;
-        rigidbody.velocity = new Vector2(horizontalValue * moveSpeed, rigidbody.velocity.y);
+        // Dash
+        if (dashAction.IsPressed() && dashCooldownTimer < 0)
+            DoDash();
+        
+        // Move 
+        DoMove();
+        
+        // Flip
         DoFlip();
 
         // Jump
-        bIsGrounded = Physics2D.Raycast(gameObject.transform.position, Vector2.down, distanceToCheckGround, LayerMask.GetMask("Ground"));
         if (jumpAction.IsPressed() && bIsGrounded)
-            rigidbody.velocity = new Vector2(rigidbody.velocity.x, jumpForce);
+            DoJump();
         
+        // Update Parameters for Animator
         UpdateAnimatiorParameters();
+    }
+
+    void DoMove()
+    {
+        float horizontalValue = moveAction.ReadValue<Vector2>().x;
+
+        if (dashTime > 0)
+            rigidbody.velocity = new Vector2(horizontalValue * dashSpeed, 0);
+        else
+            rigidbody.velocity = new Vector2(horizontalValue * moveSpeed, rigidbody.velocity.y);
+    }
+
+    void DoJump()
+    {
+        rigidbody.velocity = new Vector2(rigidbody.velocity.x, jumpForce);
     }
 
     // Flip이 호출되는 경우는 회전하는 경우이므로 상태를 전부 다 역전시켜야 한다
@@ -94,12 +126,18 @@ public class PlayerController : MonoBehaviour
             Flip();
     }
 
+    void DoDash()
+    {
+        dashTime = dashDuaration;
+        dashCooldownTimer = dashCooldown;
+    }
+
     void UpdateAnimatiorParameters()
     {
-        bIsMoving = (rigidbody.velocity.x != 0);
         animator.SetFloat("yVelocity", rigidbody.velocity.y);
         animator.SetBool("bIsMoving", bIsMoving);
         animator.SetBool("bIsGrounded", bIsGrounded);
+        animator.SetBool("bIsDashing", bIsDashing);
     }
 
     private void OnDrawGizmos()
