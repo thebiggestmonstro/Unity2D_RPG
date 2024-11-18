@@ -264,6 +264,7 @@ GameObject:
   - component: {fileID: 478747143}
   - component: {fileID: 478747144}
   - component: {fileID: 478747145}
+  - component: {fileID: 478747146}
   m_Layer: 0
   m_Name: Animator
   m_TagString: Untagged
@@ -359,6 +360,18 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &478747146
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 478747142}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d957f67482282464f8fa1860289a8cc8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -544,7 +557,7 @@ MonoBehaviour:
       m_Flags: 4
     - m_Name: left
       m_Id: 51e71178-a2a2-4d93-a94a-7997a5830510
-      m_Path: <Keyboard>/leftArrow
+      m_Path: <Keyboard>/a
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -552,7 +565,7 @@ MonoBehaviour:
       m_Flags: 8
     - m_Name: right
       m_Id: f2d17d23-b773-443c-b507-643c66e38e51
-      m_Path: <Keyboard>/rightArrow
+      m_Path: <Keyboard>/d
       m_Interactions: 
       m_Processors: 
       m_Groups: 
@@ -593,12 +606,31 @@ MonoBehaviour:
       m_Action: Dash
       m_Flags: 0
     m_Flags: 0
+  attackAction:
+    m_Name: Attack
+    m_Type: 1
+    m_ExpectedControlType: Button
+    m_Id: cd1d722c-11d9-43d7-83ae-e9b5aca72c5a
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: 011d6f6b-7f58-4352-9284-f0ce57a2d522
+      m_Path: <Mouse>/leftButton
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Attack
+      m_Flags: 0
+    m_Flags: 0
   dashDuaration: 0.4
   dashSpeed: 15
   dashCooldown: 1.5
   moveSpeed: 7
   jumpForce: 10
   distanceToCheckGround: 1.4
+  comboCounter: 0
+  comboCooldown: 0.3
 --- !u!70 &690736960
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
