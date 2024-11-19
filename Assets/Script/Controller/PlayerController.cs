@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class PlayerController : MonoBehaviour
+public class PlayerController : BaseController
 {
     [Header("Input")]
     [SerializeField]
@@ -30,8 +30,6 @@ public class PlayerController : MonoBehaviour
     float moveSpeed = 10.0f;
     [SerializeField]
     float jumpForce = 5.0f;
-    [SerializeField]
-    float distanceToCheckGround;
 
     [Header("Attack Parameters")]
     [SerializeField]
@@ -39,17 +37,10 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     private float comboCooldown = 0.3f;
     private float comboCooldownTimer;
-
-    Animator animator;
-    Rigidbody2D rigidbody;
-    
+   
     bool bIsMoving = false;
-    bool bIsGrounded = true;
-    bool bIsFacingRight = true;
     bool bIsDashing = false;
     bool bIsAttacking = false;
-
-    int facingDirection = 1;
 
     private void OnEnable()
     {
@@ -67,24 +58,24 @@ public class PlayerController : MonoBehaviour
         attackAction.Disable();
     }
 
-    private void Update()
+    protected override void Update()
     {
+        base.Update();
+
         dashTime -= Time.deltaTime;
         dashCooldownTimer -= Time.deltaTime;
 
         comboCooldownTimer -= Time.deltaTime;
         
-        bIsGrounded = Physics2D.Raycast(gameObject.transform.position, Vector2.down, distanceToCheckGround, LayerMask.GetMask("Ground"));
         bIsMoving = (rigidbody.velocity.x != 0);
         bIsDashing = dashTime < 0.0f ? false : true;
 
         UpdateMoving();
     }
 
-    private void Start()
+    protected override void Start()
     {
-        animator = GetComponentInChildren<Animator>();
-        rigidbody = GetComponent<Rigidbody2D>();
+        base.Start();
     }
 
     void UpdateMoving()
@@ -95,9 +86,6 @@ public class PlayerController : MonoBehaviour
         
         // Move 
         DoMove();
-        
-        // Flip
-        DoFlip();
 
         // Jump
         if (jumpAction.IsPressed())
@@ -131,25 +119,7 @@ public class PlayerController : MonoBehaviour
         {
             rigidbody.velocity = new Vector2(rigidbody.velocity.x, jumpForce);
         }
-    }
-
-    // Flip이 호출되는 경우는 회전하는 경우이므로 상태를 전부 다 역전시켜야 한다
-    void Flip()
-    {
-        facingDirection *= -1;
-        bIsFacingRight = !bIsFacingRight;
-        gameObject.transform.Rotate(0, 180, 0);
-    }
-
-    void DoFlip()
-    {
-        // 왼쪽을 바라보고 있으면서 오른쪽 키를 누른 경우
-        if (rigidbody.velocity.x > 0 && !bIsFacingRight)
-            Flip();
-        // 오른쪽을 바라보고 있으면서 왼쪽 키를 누른 경우
-        else if (rigidbody.velocity.x < 0 && bIsFacingRight)
-            Flip();
-    }
+    }  
 
     void DoDash()
     {
@@ -192,15 +162,5 @@ public class PlayerController : MonoBehaviour
 
         if (comboCounter > 2)
             comboCounter = 0;
-    }
-
-    private void OnDrawGizmos()
-    {
-        Gizmos.DrawLine(
-            gameObject.transform.position, 
-            new Vector3(
-                gameObject.transform.position.x,
-                gameObject.transform.position.y - distanceToCheckGround)
-        );
     }
 }
