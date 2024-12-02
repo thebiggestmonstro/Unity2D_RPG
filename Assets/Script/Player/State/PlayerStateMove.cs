@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerStateMove : PlayerState
+public class PlayerStateMove : PlayerStateGrounded
 {
     public PlayerStateMove(PlayerController inController, PlayerStateMachine inStateMachine, string inParamName) 
         : base(inController, inStateMachine, inParamName)
@@ -21,8 +21,10 @@ public class PlayerStateMove : PlayerState
     {
         base.Update();
 
-        if(Input.GetKeyDown(KeyCode.N))
-            _controller._stateMachine.ChangeState(_controller._idleState);
+        _controller.SetVelocity(_xInput * _controller._moveSpeed, _rigidbody2D.velocity.y);
+
+        if(_xInput == 0)
+           _stateMachine.ChangeState(_controller._idleState);
     }
 
     // Stateø°º≠ ≈ª√‚

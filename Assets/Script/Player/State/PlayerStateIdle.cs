@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerStateIdle : PlayerState
+public class PlayerStateIdle : PlayerStateGrounded
 {
     public PlayerStateIdle(PlayerController inController, PlayerStateMachine inStateMachine, string inParamName) 
         : base(inController, inStateMachine, inParamName)
@@ -14,6 +14,8 @@ public class PlayerStateIdle : PlayerState
     public override void Enter()
     {
         base.Enter();
+
+        _rigidbody2D.velocity = Vector2.zero;
     }
 
     // State에서 매 프레임마다 진행
@@ -21,8 +23,8 @@ public class PlayerStateIdle : PlayerState
     {
         base.Update();
 
-        if (Input.GetKeyDown(KeyCode.N))
-            _controller._stateMachine.ChangeState(_controller._moveState);
+        if (_xInput != 0)
+            _stateMachine.ChangeState(_controller._moveState);
     }
 
     // State에서 탈출
