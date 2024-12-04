@@ -18,22 +18,25 @@ public class PlayerStateDash : PlayerState
         _stateTimer = _controller._dashDuration;
     }
 
-    // State에서 매 프레임마다 진행
-    public override void Update()
-    {
-        base.Update();
-
-        _controller.SetVelocity(_controller._dashSpeed * _controller._dashDir, 0);
-
-        if (_stateTimer < 0.0f)
-            _stateMachine.ChangeState(_controller._idleState);
-    }
-
     // State에서 탈출
     public override void Exit()
     {
         base.Exit();
 
         _controller.SetVelocity(0, _rigidbody2D.velocity.y);
+    }
+
+    // State에서 매 프레임마다 진행
+    public override void Update()
+    {
+        base.Update();
+
+        if (!_controller.DoDetectIsGrounded() && _controller.DoDetectIsFacingWall())
+            _stateMachine.ChangeState(_controller._wallSlideState);
+
+        _controller.SetVelocity(_controller._dashSpeed * _controller._dashDir, 0);
+
+        if (_stateTimer < 0.0f)
+            _stateMachine.ChangeState(_controller._idleState);
     }
 }

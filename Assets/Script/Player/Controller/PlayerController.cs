@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Unity.Burst;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -18,6 +19,9 @@ public class PlayerController : MonoBehaviour
     public PlayerStateJump _jumpState { get; private set; }
     public PlayerStateInAir _inAirState { get; private set; }
     public PlayerStateDash _dashState { get; private set; }
+    public PlayerStateWallSlide _wallSlideState { get; private set; }
+    public PlayerStateWallJump _wallJumpState { get; private set; }
+    public PlayerStatePrimaryAttack _priamaryAttackState { get; private set; }
     #endregion
 
     // Player Input
@@ -27,11 +31,15 @@ public class PlayerController : MonoBehaviour
     InputAction _jumpAction;
     [SerializeField]
     InputAction _dashAction;
+    [SerializeField]
+    InputAction _attackAction;
 
     // Player Move Info
     public float _moveSpeed = 12f;
     public float _jumpForce = 12f;
-    public float _horizontalValue  { get; private set; }
+    public bool _isJumpPressed;
+    public bool _isAttackClicked;
+    public float _horizontalValue { get; private set; }
     public float _verticalValue { get; private set; }
 
     // Dash Info
@@ -40,8 +48,9 @@ public class PlayerController : MonoBehaviour
     private float _dashUsageTimer;
     public float _dashSpeed;
     public float _dashDuration;
-    public float _dashDir { get; private set; } 
+    public float _dashDir { get; private set; }
 
+    public bool _doingSomething { get; private set; }
     public Rigidbody2D _rigidbody2D { get; private set; }
 
     [Header("Collision Info")]
@@ -54,6 +63,8 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     private float _wallCheckDistance;
 
+    [Header("Attack Details")]
+    public Vector2[] _attackMovement;
 
     public int _facingDir { get; private set; } = 1;
     private bool _facingRight = true;
@@ -63,6 +74,7 @@ public class PlayerController : MonoBehaviour
         _moveAction.Enable();
         _jumpAction.Enable();
         _dashAction.Enable();
+        _attackAction.Enable();
     }
 
     private void OnDisable()
@@ -70,6 +82,7 @@ public class PlayerController : MonoBehaviour
         _moveAction.Disable();
         _jumpAction.Disable();
         _dashAction.Disable();
+        _attackAction.Disable();
     }
 
     private void Awake()
@@ -81,6 +94,9 @@ public class PlayerController : MonoBehaviour
         _jumpState = new PlayerStateJump(this, _stateMachine, "Jump");
         _inAirState = new PlayerStateInAir(this, _stateMachine, "Jump");
         _dashState = new PlayerStateDash(this, _stateMachine, "Dash");
+        _wallSlideState = new PlayerStateWallSlide(this, _stateMachine, "WallSlide");
+        _wallJumpState = new PlayerStateWallJump(this, _stateMachine, "WallJump");
+        _priamaryAttackState = new PlayerStatePrimaryAttack(this, _stateMachine, "Attack");
     }
 
     private void Start()
@@ -94,12 +110,23 @@ public class PlayerController : MonoBehaviour
     private void Update()
     {
         _stateMachine._currentState.Update();
-        
+
         DoMove();
 
         DoJump();
 
         DoDash();
+
+        DoAttack();
+    }
+
+    public IEnumerator DoSomething(float _seconds)
+    {
+        _doingSomething = true;
+
+        yield return new WaitForSeconds(_seconds);
+
+        _doingSomething = false;
     }
 
     public void SetVelocity(float xVelocity, float yVelcoity)
@@ -108,17 +135,20 @@ public class PlayerController : MonoBehaviour
         DoFlip(xVelocity);
     }
 
+    public void SetZeroVelocity() => _rigidbody2D.velocity = Vector2.zero; 
+
     void DoMove()
     {
         _horizontalValue = _moveAction.ReadValue<Vector2>().x;
+        _verticalValue = _moveAction.ReadValue<Vector2>().y;
     }
 
     void DoJump()
     {
         if (_jumpAction.IsPressed())
-            _verticalValue = _jumpForce;
+            _isJumpPressed = true;
         else
-            _verticalValue = 0.0f;
+            _isJumpPressed = false;
     }
 
     public void Flip()
@@ -138,6 +168,9 @@ public class PlayerController : MonoBehaviour
 
     void DoDash()
     {
+        if (DoDetectIsFacingWall())
+            return;
+
         _dashUsageTimer -= Time.deltaTime;
 
         if (_dashAction.IsPressed() && _dashUsageTimer < 0)
@@ -152,7 +185,18 @@ public class PlayerController : MonoBehaviour
         }       
     }
 
+    void DoAttack()
+    {
+        if (_attackAction.IsPressed())
+            _isAttackClicked = true;
+        else
+            _isAttackClicked = false;
+    }
+
+    public void AnimationTrigger() => _stateMachine._currentState.AnimationFinishTrigger();
+
     public bool DoDetectIsGrounded() => Physics2D.Raycast(_groundCheck.position, Vector2.down, _groundCheckDistance, LayerMask.GetMask("Ground"));
+    public bool DoDetectIsFacingWall() => Physics2D.Raycast(_wallCheck.position, Vector2.right * _facingDir, _wallCheckDistance, LayerMask.GetMask("Ground"));
 
     private void OnDrawGizmos()
     {

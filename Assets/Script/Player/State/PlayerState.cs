@@ -12,7 +12,12 @@ public class PlayerState
     // Player Input
     protected float _xInput;
     protected float _yInput;
+    protected bool _isJumping;
+    protected bool _isAttacking;
     protected Rigidbody2D _rigidbody2D;
+
+    // Animation Event
+    protected bool _triggerCalled;
 
     // State Timer
     protected float _stateTimer;
@@ -29,6 +34,13 @@ public class PlayerState
     {
         _controller._animtor.SetBool(_animatorBoolParamName, true);
         _rigidbody2D = _controller._rigidbody2D;
+        _triggerCalled = false;
+    }
+
+    // State에서 탈출
+    public virtual void Exit()
+    {
+        _controller._animtor.SetBool(_animatorBoolParamName, false);
     }
 
     // State에서 매 프레임마다 진행
@@ -38,12 +50,13 @@ public class PlayerState
 
         _xInput = _controller._horizontalValue;
         _yInput = _controller._verticalValue;
+        _isJumping = _controller._isJumpPressed;
+        _isAttacking = _controller._isAttackClicked;
         _controller._animtor.SetFloat("yVelocity", _rigidbody2D.velocity.y);
     }
 
-    // State에서 탈출
-    public virtual void Exit()
+    public virtual void AnimationFinishTrigger()
     {
-        _controller._animtor.SetBool(_animatorBoolParamName, false);
+        _triggerCalled = true;
     }
 }

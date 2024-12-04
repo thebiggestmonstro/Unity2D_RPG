@@ -17,16 +17,16 @@ public class PlayerStateJump : PlayerState
         _controller.SetVelocity(_rigidbody2D.velocity.x, _controller._jumpForce);
     }
 
+    public override void Exit()
+    {
+        base.Exit();
+    }
+
     public override void Update()
     {
         base.Update();
 
         if (_rigidbody2D.velocity.y < 0)
             _stateMachine.ChangeState(_controller._inAirState);
-    }
-
-    public override void Exit()
-    {
-        base.Exit();
     }
 }

@@ -24,10 +24,13 @@ public class PlayerStateGrounded : PlayerState
     {
         base.Update();
 
+        if (_isAttacking)
+            _stateMachine.ChangeState(_controller._priamaryAttackState);
+
         if (!_controller.DoDetectIsGrounded())
             _stateMachine.ChangeState(_controller._inAirState);
 
-        if (_yInput != 0 && _controller.DoDetectIsGrounded())
+        if (_isJumping && _controller.DoDetectIsGrounded())
             _stateMachine.ChangeState(_controller._jumpState);
     }
 }

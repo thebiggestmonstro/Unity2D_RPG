@@ -15,7 +15,13 @@ public class PlayerStateIdle : PlayerStateGrounded
     {
         base.Enter();
 
-        _rigidbody2D.velocity = Vector2.zero;
+        _controller.SetZeroVelocity();
+    }
+
+    // State에서 탈출
+    public override void Exit()
+    {
+        base.Exit();
     }
 
     // State에서 매 프레임마다 진행
@@ -23,13 +29,10 @@ public class PlayerStateIdle : PlayerStateGrounded
     {
         base.Update();
 
-        if (_xInput != 0)
-            _stateMachine.ChangeState(_controller._moveState);
-    }
+        if (_xInput == _controller._facingDir && _controller.DoDetectIsFacingWall())
+            return;
 
-    // State에서 탈출
-    public override void Exit()
-    {
-        base.Exit();
+        if (_xInput != 0 && !_controller._doingSomething)
+            _stateMachine.ChangeState(_controller._moveState);
     }
 }

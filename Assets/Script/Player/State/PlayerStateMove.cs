@@ -16,6 +16,12 @@ public class PlayerStateMove : PlayerStateGrounded
         base.Enter();
     }
 
+    // State에서 탈출
+    public override void Exit()
+    {
+        base.Exit();
+    }
+
     // State에서 매 프레임마다 진행
     public override void Update()
     {
@@ -23,13 +29,7 @@ public class PlayerStateMove : PlayerStateGrounded
 
         _controller.SetVelocity(_xInput * _controller._moveSpeed, _rigidbody2D.velocity.y);
 
-        if(_xInput == 0)
-           _stateMachine.ChangeState(_controller._idleState);
-    }
-
-    // State에서 탈출
-    public override void Exit()
-    {
-        base.Exit();
+        if (_xInput == 0 || _controller.DoDetectIsFacingWall())
+            _stateMachine.ChangeState(_controller._idleState);
     }
 }
